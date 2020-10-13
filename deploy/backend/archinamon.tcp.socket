@@ -1,0 +1,9 @@
+[Unit]
+Description=Archinamon Fullstack Personal installation stand — backend part
+PartOf=archinamon.tcp.service
+
+[Socket]
+ListenStream=127.0.0.1:80
+
+[Install]
+WantedBy=sockets.target
