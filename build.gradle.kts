@@ -17,19 +17,17 @@ repositories {
 }
 
 kotlin {
-    when (System.getProperty("os.name")) {
-        "Mac OS X" -> macosX64("posix")
-        "Linux" -> linuxX64("posix")
-        else -> throw GradleException("Host OS is not supported in this project.")
-    }.binaries {
-        executable {
-            entryPoint("${project.group}.server.main")
+    linuxX64 {
+        binaries {
+            executable {
+                entryPoint("${project.group}.server.main")
 
-            val serverPort = if (extra.has("cgi.server.runningPort"))
-                extra["cgi.server.runningPort"]
-            else 8080
+                val serverPort = if (extra.has("cgi.server.runningPort"))
+                    extra["cgi.server.runningPort"]
+                else 8080
 
-            runTask?.args(serverPort, true)
+                runTask?.args(serverPort, true)
+            }
         }
     }
 
@@ -54,7 +52,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("me.archinamon:file-io:1.0")
+//                implementation("me.archinamon:file-io:1.0")
             }
         }
 
@@ -67,9 +65,9 @@ kotlin {
             }
         }
 
-        val posixMain by getting {
+        val linuxX64Main by getting {
             dependencies {
-                implementation("me.archinamon:file-io-posix:1.0")
+                implementation("me.archinamon:file-io-linuxx64:1.0")
             }
         }
     }
