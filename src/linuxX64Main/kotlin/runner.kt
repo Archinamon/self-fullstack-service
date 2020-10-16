@@ -12,8 +12,6 @@ fun main(args: Array<String>) {
     val testEnv = if (args.size > 1) args.last().toBoolean() else false
 
     with(Server(testEnv, serverPort)) {
-        buildSocketOn()
-
         do {
             memScoped {
                 handleConnections().let { readSet ->

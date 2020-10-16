@@ -51,30 +51,10 @@ class Server(
         // Initialize sockets in platform-dependent way.
         init_sockets()
 
+        // listen to public tcp port...
+        socketDescriptor = buildSocket()
+
         println("Start TCP server listening on $port port.")
-    }
-
-    fun buildSocketOn(): Int = memScoped {
-        val serverAddr = alloc<sockaddr_in>()
-
-        socketDescriptor = socket(AF_INET, SOCK_STREAM, 0)
-            .ensureUnixCallResult("socket") { ret -> ret != -1 }
-
-        fcntl(socketDescriptor, F_SETFL, O_NONBLOCK)
-            .ensureUnixCallResult("fcntl") { ret -> ret != -1 }
-
-        serverAddr.apply {
-            memset(this.ptr, 0, sockaddr_in.size.convert())
-            sin_family = AF_INET.convert()
-            sin_port = htons(port)
-            sin_addr.s_addr = htonl(INADDR_ANY)
-        }
-
-        bind(socketDescriptor, serverAddr.ptr.reinterpret(), sockaddr_in.size.convert())
-            .ensureUnixCallResult("bind") { ret -> ret == 0 }
-
-        listen(socketDescriptor, MAX_CONNECTIONS)
-            .ensureUnixCallResult("listen") { ret -> ret == 0 }
     }
 
     fun MemScope.handleConnections(): fd_set {
@@ -134,5 +114,28 @@ class Server(
                 }
             }
         }
+    }
+
+    private fun buildSocket(): Int = memScoped {
+        val serverAddr = alloc<sockaddr_in>()
+
+        socketDescriptor = socket(AF_INET, SOCK_STREAM, 0)
+            .ensureUnixCallResult("socket") { ret -> ret != -1 }
+
+        fcntl(socketDescriptor, F_SETFL, O_NONBLOCK)
+            .ensureUnixCallResult("fcntl") { ret -> ret != -1 }
+
+        serverAddr.apply {
+            memset(this.ptr, 0, sockaddr_in.size.convert())
+            sin_family = AF_INET.convert()
+            sin_port = htons(port)
+            sin_addr.s_addr = htonl(INADDR_ANY)
+        }
+
+        bind(socketDescriptor, serverAddr.ptr.reinterpret(), sockaddr_in.size.convert())
+            .ensureUnixCallResult("bind") { ret -> ret == 0 }
+
+        listen(socketDescriptor, MAX_CONNECTIONS)
+            .ensureUnixCallResult("listen") { ret -> ret == 0 }
     }
 }
