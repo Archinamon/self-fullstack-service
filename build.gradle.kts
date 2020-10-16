@@ -21,12 +21,6 @@ kotlin {
         binaries {
             executable {
                 entryPoint("${project.group}.server.main")
-
-                val serverPort = if (extra.has("cgi.server.runningPort"))
-                    extra["cgi.server.runningPort"]
-                else 8080
-
-                runTask?.args(serverPort, true)
             }
         }
     }
