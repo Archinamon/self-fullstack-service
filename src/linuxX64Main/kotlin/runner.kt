@@ -9,9 +9,8 @@ private const val DEV_PORT: UShort = 3434U
 @ExperimentalUnsignedTypes
 fun main(args: Array<String>) {
     val serverPort = if (args.isNotEmpty()) args.first().toUShort() else DEV_PORT
-    val testEnv = if (args.size > 1) args.last().toBoolean() else false
 
-    with(Server(testEnv, serverPort)) {
+    with(AsyncTCPServer(serverPort)) {
         do {
             memScoped {
                 handleConnections().let { readSet ->

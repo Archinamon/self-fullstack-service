@@ -35,8 +35,7 @@ import platform.posix.timeval
 import kotlin.math.max
 
 @ExperimentalUnsignedTypes
-class Server(
-    private val testEnv: Boolean,
+class AsyncTCPServer(
     private val port: UShort
 ) {
 
