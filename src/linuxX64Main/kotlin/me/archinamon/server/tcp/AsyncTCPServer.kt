@@ -8,7 +8,10 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.usePinned
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import me.archinamon.posix.ensureUnixCallResult
+import me.archinamon.server.tcp.bind.BindingRequest
 import me.archinamon.server.tcp.bind.SocketBinder
 import platform.posix.AF_INET
 import platform.posix.F_SETFL
@@ -121,6 +124,18 @@ class AsyncTCPServer(
 
                     return@usePinned rawStr.substring(0, rawStr.lastIndexOf('}') + 1)
                         .also { println("Input message: [$it]") }
+                }
+
+                if (incomeMessage.isBlank() || !incomeMessage.isJson()) {
+                    return@forEach
+                }
+
+                val request = Json.decodeFromString<BindingRequest<String>>(incomeMessage)
+                val response = request.toString() + '\n'
+
+                response.encodeToByteArray().usePinned { buffer ->
+                    send(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
+                        .ensureUnixCallResult("send") { ret -> ret >= 0 }
                 }
             }
         }
