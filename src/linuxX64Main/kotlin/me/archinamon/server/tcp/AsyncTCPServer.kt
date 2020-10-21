@@ -1,4 +1,4 @@
-package me.archinamon.server
+package me.archinamon.server.tcp
 
 import kotlinx.cinterop.MemScope
 import kotlinx.cinterop.addressOf
@@ -8,6 +8,8 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.usePinned
+import me.archinamon.posix.ensureUnixCallResult
+import me.archinamon.server.tcp.bind.SocketBinder
 import platform.posix.AF_INET
 import platform.posix.F_SETFL
 import platform.posix.INADDR_ANY
@@ -36,7 +38,8 @@ import kotlin.math.max
 
 @ExperimentalUnsignedTypes
 class AsyncTCPServer(
-    private val port: UShort
+    private val port: UShort,
+    private vararg val binders: SocketBinder
 ) {
 
     private companion object {

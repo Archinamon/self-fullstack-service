@@ -1,4 +1,4 @@
-package me.archinamon.server
+package me.archinamon.posix
 
 import kotlinx.cinterop.toKString
 import platform.posix.posix_errno

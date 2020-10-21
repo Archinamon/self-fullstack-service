@@ -1,6 +1,7 @@
 package me.archinamon.server
 
 import kotlinx.cinterop.memScoped
+import me.archinamon.server.tcp.AsyncTCPServer
 
 // !!should be the same as `cgi.server.runningPort` value in gradle.properties file!!
 @ExperimentalUnsignedTypes

@@ -47,6 +47,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
 //                implementation("me.archinamon:file-io:1.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-M1")
             }
         }
 
