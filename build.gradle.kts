@@ -1,7 +1,12 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
+val kotlinVersion = System.getProperty("kotlin.version")
+
 plugins {
-    kotlin("multiplatform") version "1.4.10"
+    val kotlinVersion = System.getProperty("kotlin.version")
+
+    kotlin("multiplatform") version kotlinVersion
+    kotlin("plugin.serialization") version kotlinVersion
 }
 
 group = "me.archinamon"
@@ -46,17 +51,18 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-//                implementation("me.archinamon:file-io:1.0")
+                implementation("me.archinamon:file-io:1.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-M1")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0")
             }
         }
 
         val jsMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.2")
-                implementation("org.jetbrains:kotlin-react:16.13.1-pre.110-kotlin-1.4.10")
-                implementation("org.jetbrains:kotlin-react-dom:16.13.1-pre.110-kotlin-1.4.10")
-                implementation("org.jetbrains:kotlin-styled:1.0.0-pre.110-kotlin-1.4.10")
+                implementation("org.jetbrains:kotlin-react:16.13.1-pre.110-kotlin-$kotlinVersion")
+                implementation("org.jetbrains:kotlin-react-dom:16.13.1-pre.110-kotlin-$kotlinVersion")
+                implementation("org.jetbrains:kotlin-styled:1.0.0-pre.110-kotlin-$kotlinVersion")
             }
         }
 

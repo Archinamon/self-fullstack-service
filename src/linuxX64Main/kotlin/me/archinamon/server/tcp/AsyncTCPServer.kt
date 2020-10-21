@@ -44,6 +44,10 @@ class AsyncTCPServer(
 
     private companion object {
         const val MAX_CONNECTIONS = 10
+
+        private fun String.isJson(): Boolean {
+            return startsWith('{') && (endsWith('}') || (lastIndexOf('}') >= length - 5))
+        }
     }
 
     private var socketDescriptor: Int = -1
@@ -54,7 +58,7 @@ class AsyncTCPServer(
         init_sockets()
 
         // listen to public tcp port...
-        socketDescriptor = buildSocket()
+        buildSocket()
 
         println("Start TCP server listening on $port port.")
     }
@@ -91,6 +95,8 @@ class AsyncTCPServer(
                 .ensureUnixCallResult("fcntl") { ret -> ret != -1 }
 
             clients += incomeConnection
+
+            binders.forEach(SocketBinder::connected)
         }
     }
 
@@ -99,26 +105,28 @@ class AsyncTCPServer(
             if (posix_FD_ISSET(clientFd, readSet.ptr) > 0) {
                 println("Awaiting client input...")
 
-                ByteArray(1024).usePinned { buffer ->
+                val incomeMessage = ByteArray(1024).usePinned { buffer ->
                     val messageLength = recv(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
 
                     if (messageLength <= 0) {
                         close(clientFd)
                         clients.remove(clientFd)
+                        binders.forEach(SocketBinder::disconnected)
 
                         println("Client disconnects... close connection.")
                         return@forEach
                     }
 
-                    println("Input message: [${buffer.get().decodeToString()}]")
-                    send(clientFd, buffer.addressOf(0), messageLength.convert(), 0)
-                        .ensureUnixCallResult("send") { ret -> ret >= 0 }
+                    val rawStr = buffer.get().decodeToString()
+
+                    return@usePinned rawStr.substring(0, rawStr.lastIndexOf('}') + 1)
+                        .also { println("Input message: [$it]") }
                 }
             }
         }
     }
 
-    private fun buildSocket(): Int = memScoped {
+    private fun buildSocket() = memScoped {
         val serverAddr = alloc<sockaddr_in>()
 
         socketDescriptor = socket(AF_INET, SOCK_STREAM, 0)
@@ -141,3 +149,4 @@ class AsyncTCPServer(
             .ensureUnixCallResult("listen") { ret -> ret == 0 }
     }
 }
+

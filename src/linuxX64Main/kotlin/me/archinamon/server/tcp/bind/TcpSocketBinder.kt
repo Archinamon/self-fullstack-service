@@ -5,6 +5,14 @@ import kotlin.reflect.KClass
 
 actual open class TcpSocketBinder<T : Any> actual constructor(routeClass: KClass<out T>) : SocketBinder {
 
+    override fun connected() {
+        println("${this::class.qualifiedName} connected")
+    }
+
+    override fun disconnected() {
+        println("${this::class.qualifiedName} disconnected")
+    }
+
     protected actual fun bindCmd(route: String, processor: suspend T.(String) -> Boolean) {
     }
 
