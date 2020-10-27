@@ -8,11 +8,17 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.usePinned
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import me.archinamon.posix.ensureUnixCallResult
 import me.archinamon.server.tcp.bind.BindingRequest
+import me.archinamon.server.tcp.bind.JsonStr
 import me.archinamon.server.tcp.bind.SocketBinder
+import me.archinamon.server.tcp.bind.isJson
 import platform.posix.AF_INET
 import platform.posix.F_SETFL
 import platform.posix.INADDR_ANY
@@ -47,23 +53,42 @@ class AsyncTCPServer(
 
     private companion object {
         const val MAX_CONNECTIONS = 10
-
-        private fun String.isJson(): Boolean {
-            return startsWith('{') && (endsWith('}') || (lastIndexOf('}') >= length - 5))
-        }
     }
 
     private var socketDescriptor: Int = -1
     private val clients = mutableSetOf<Int>()
 
     init {
+        println("Welcome to KNN — the Kotlin Nano Nginx!")
+
         // Initialize sockets in platform-dependent way.
         init_sockets()
 
-        // listen to public tcp port...
-        buildSocket()
+        // bind socket to port and listen to public tcp port...
+        memScoped {
+            val serverAddr = alloc<sockaddr_in>()
 
-        println("Start TCP server listening on $port port.")
+            socketDescriptor = socket(AF_INET, SOCK_STREAM, 0)
+                .ensureUnixCallResult("socket") { ret -> ret != -1 }
+
+            fcntl(socketDescriptor, F_SETFL, O_NONBLOCK)
+                .ensureUnixCallResult("fcntl") { ret -> ret != -1 }
+
+            serverAddr.apply {
+                memset(this.ptr, 0, sockaddr_in.size.convert())
+                sin_family = AF_INET.convert()
+                sin_port = htons(port)
+                sin_addr.s_addr = htonl(INADDR_ANY)
+            }
+
+            bind(socketDescriptor, serverAddr.ptr.reinterpret(), sockaddr_in.size.convert())
+                .ensureUnixCallResult("bind") { ret -> ret == 0 }
+
+            listen(socketDescriptor, MAX_CONNECTIONS)
+                .ensureUnixCallResult("listen") { ret -> ret == 0 }
+        }
+
+        println("Starting TCP server listening on $port port.")
     }
 
     fun MemScope.handleConnections(): fd_set {
@@ -106,62 +131,43 @@ class AsyncTCPServer(
     fun handleClients(readSet: fd_set) {
         clients.forEach { clientFd ->
             if (posix_FD_ISSET(clientFd, readSet.ptr) > 0) {
-                println("Awaiting client input...")
-
-                val incomeMessage = ByteArray(1024).usePinned { buffer ->
-                    val messageLength = recv(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
-
-                    if (messageLength <= 0) {
-                        close(clientFd)
-                        clients.remove(clientFd)
-                        binders.forEach(SocketBinder::disconnected)
-
-                        println("Client disconnects... close connection.")
-                        return@forEach
-                    }
-
-                    val rawStr = buffer.get().decodeToString()
-
-                    return@usePinned rawStr.substring(0, rawStr.lastIndexOf('}') + 1)
-                        .also { println("Input message: [$it]") }
-                }
-
-                if (incomeMessage.isBlank() || !incomeMessage.isJson()) {
-                    return@forEach
-                }
-
-                val request = Json.decodeFromString<BindingRequest<String>>(incomeMessage)
-                val response = request.toString() + '\n'
-
-                response.encodeToByteArray().usePinned { buffer ->
-                    send(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
-                        .ensureUnixCallResult("send") { ret -> ret >= 0 }
+                handleRequestAsync(clientFd).also {
+                    println("Handling client input...")
                 }
             }
         }
     }
 
-    private fun buildSocket() = memScoped {
-        val serverAddr = alloc<sockaddr_in>()
+    private fun handleRequestAsync(clientFd: Int) = GlobalScope.launch(Dispatchers.Unconfined) {
+        val incomeMessage: JsonStr = ByteArray(1024).usePinned { buffer ->
+            val messageLength = recv(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
 
-        socketDescriptor = socket(AF_INET, SOCK_STREAM, 0)
-            .ensureUnixCallResult("socket") { ret -> ret != -1 }
+            if (messageLength <= 0) {
+                close(clientFd)
+                clients.remove(clientFd)
+                binders.forEach(SocketBinder::disconnected)
 
-        fcntl(socketDescriptor, F_SETFL, O_NONBLOCK)
-            .ensureUnixCallResult("fcntl") { ret -> ret != -1 }
+                println("Client disconnects... close connection.")
+                return@launch
+            }
 
-        serverAddr.apply {
-            memset(this.ptr, 0, sockaddr_in.size.convert())
-            sin_family = AF_INET.convert()
-            sin_port = htons(port)
-            sin_addr.s_addr = htonl(INADDR_ANY)
+            val rawStr = buffer.get().decodeToString()
+
+            return@usePinned rawStr.substring(0, rawStr.lastIndexOf('}') + 1)
+                .also { println("Input message: [$it]") }
         }
 
-        bind(socketDescriptor, serverAddr.ptr.reinterpret(), sockaddr_in.size.convert())
-            .ensureUnixCallResult("bind") { ret -> ret == 0 }
+        if (incomeMessage.isBlank() || !incomeMessage.isJson()) {
+            return@launch
+        }
 
-        listen(socketDescriptor, MAX_CONNECTIONS)
-            .ensureUnixCallResult("listen") { ret -> ret == 0 }
+        val request = Json.decodeFromString<BindingRequest>(incomeMessage)
+        val response = request.toString() + '\n'
+
+        response.encodeToByteArray().usePinned { buffer ->
+            send(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
+                .ensureUnixCallResult("send") { ret -> ret >= 0 }
+        }
     }
 }
 
