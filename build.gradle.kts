@@ -1,24 +1,47 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
-val kotlinVersion = System.getProperty("kotlin.version")
+evaluationDependsOn(":kompiler")
+
+buildscript {
+    val kotlinVersion = System.getProperty("kotlin.version")
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven("https://plugins.gradle.org/m2/")
+        maven("https://kotlin.bintray.com/kotlinx")
+        maven("https://dl.bintray.com/kotlin/kotlin-js-wrappers")
+    }
+
+    dependencies {
+        classpath(kotlin("serialization", kotlinVersion))
+        classpath(kotlin("gradle-plugin", kotlinVersion))
+    }
+}
 
 plugins {
     val kotlinVersion = System.getProperty("kotlin.version")
 
     kotlin("multiplatform") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
+
+    id("me.archinamon.tcp.build-plugin") apply true
 }
 
 group = "me.archinamon"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-    jcenter()
-    maven("https://dl.bintray.com/kotlin/ktor")
-    maven("https://dl.bintray.com/kotlin/kotlinx")
-    maven("https://dl.bintray.com/kotlin/kotlin-js-wrappers")
-    maven("https://dl.bintray.com/archinamon/maven")
+allprojects {
+    repositories {
+        mavenLocal()
+
+        mavenCentral()
+        jcenter()
+        maven("https://dl.bintray.com/kotlin/ktor")
+        maven("https://dl.bintray.com/kotlin/kotlinx")
+        maven("https://dl.bintray.com/kotlin/kotlin-js-wrappers")
+        maven("https://dl.bintray.com/archinamon/maven")
+    }
 }
 
 kotlin {
@@ -49,15 +72,21 @@ kotlin {
     }
 
     sourceSets {
+        val kotlinVersion = System.getProperty("kotlin.version")
+
         val commonMain by getting {
+            kotlin.srcDir("build/generated-src/kompiler-plugin/common")
+
             dependencies {
-                implementation("me.archinamon:file-io:1.0")
+                implementation(project(":kompiler:graph"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-M1")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0")
             }
         }
 
         val jsMain by getting {
+            kotlin.srcDir("build/generated-src/kompiler-plugin/js")
+
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.2")
                 implementation("org.jetbrains:kotlin-react:16.13.1-pre.110-kotlin-$kotlinVersion")
@@ -67,6 +96,8 @@ kotlin {
         }
 
         val linuxX64Main by getting {
+            kotlin.srcDir("build/generated-src/kompiler-plugin/native")
+
             dependencies {
                 implementation("me.archinamon:file-io-linuxx64:1.0")
             }
