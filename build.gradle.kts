@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 evaluationDependsOn(":kompiler")
@@ -101,6 +102,20 @@ kotlin {
             dependencies {
                 implementation("me.archinamon:file-io-linuxx64:1.0")
             }
+        }
+
+        all {
+            languageSettings.enableLanguageFeature("InlineClasses")
+        }
+    }
+
+    targets.flatMap(KotlinTarget::compilations).forEach { compilation ->
+        compilation.kotlinOptions {
+            freeCompilerArgs = listOf(
+                "-XXLanguage:+InlineClasses",
+                "-Xuse-experimental=kotlin.Experimental",
+                "-Xopt-in=kotlin.reflect.ExperimentalAssociatedObjects"
+            )
         }
     }
 }

@@ -1,24 +1,16 @@
 package me.archinamon.server.tcp
 
 import kotlinx.cinterop.MemScope
-import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
-import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import me.archinamon.posix.ensureUnixCallResult
-import me.archinamon.server.tcp.bind.BindingRequest
-import me.archinamon.server.tcp.bind.JsonStr
 import me.archinamon.server.tcp.bind.SocketBinder
-import me.archinamon.server.tcp.bind.isJson
 import platform.posix.AF_INET
 import platform.posix.F_SETFL
 import platform.posix.INADDR_ANY
@@ -37,9 +29,7 @@ import platform.posix.memset
 import platform.posix.posix_FD_ISSET
 import platform.posix.posix_FD_SET
 import platform.posix.posix_FD_ZERO
-import platform.posix.recv
 import platform.posix.select
-import platform.posix.send
 import platform.posix.sockaddr_in
 import platform.posix.socket
 import platform.posix.timeval
@@ -123,8 +113,6 @@ class AsyncTCPServer(
                 .ensureUnixCallResult("fcntl") { ret -> ret != -1 }
 
             clients += incomeConnection
-
-            binders.forEach(SocketBinder::connected)
         }
     }
 
@@ -139,34 +127,15 @@ class AsyncTCPServer(
     }
 
     private fun handleRequestAsync(clientFd: Int) = GlobalScope.launch(Dispatchers.Unconfined) {
-        val incomeMessage: JsonStr = ByteArray(1024).usePinned { buffer ->
-            val messageLength = recv(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
+        val whenMessageEmpty = { descriptor: Int ->
+            close(descriptor)
+            clients.remove(descriptor)
 
-            if (messageLength <= 0) {
-                close(clientFd)
-                clients.remove(clientFd)
-                binders.forEach(SocketBinder::disconnected)
-
-                println("Client disconnects... close connection.")
-                return@launch
-            }
-
-            val rawStr = buffer.get().decodeToString()
-
-            return@usePinned rawStr.substring(0, rawStr.lastIndexOf('}') + 1)
-                .also { println("Input message: [$it]") }
+            println("Client disconnects... close connection.")
         }
 
-        if (incomeMessage.isBlank() || !incomeMessage.isJson()) {
-            return@launch
-        }
-
-        val request = Json.decodeFromString<BindingRequest>(incomeMessage)
-        val response = request.toString() + '\n'
-
-        response.encodeToByteArray().usePinned { buffer ->
-            send(clientFd, buffer.addressOf(0), buffer.get().size.convert(), 0)
-                .ensureUnixCallResult("send") { ret -> ret >= 0 }
+        TcpCallRouter(clientFd, whenMessageEmpty).proceed { request ->
+            binders.find { binder -> binder.find(request.command) }
         }
     }
 }

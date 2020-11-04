@@ -2,7 +2,7 @@ package me.archinamon.server.tcp.bind
 
 interface SocketBinder {
 
-    fun connected()
+    fun find(cmd: RouteCommand): Boolean
 
-    fun disconnected()
+    fun accept(cmd: RouteCommand): CommonCallHandler
 }
