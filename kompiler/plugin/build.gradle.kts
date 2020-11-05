@@ -8,9 +8,6 @@ plugins {
 group = "me.archinamon.tcp.server"
 version = "latest"
 
-kotlin.sourceSets["main"].kotlin.srcDirs("src/kotlin")
-kotlin.sourceSets["main"].resources.srcDirs("src/resources")
-
 tasks {
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
