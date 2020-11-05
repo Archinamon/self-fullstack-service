@@ -1,8 +1,8 @@
 package me.archinamon.tcp.server.plugin
 
+import com.intellij.mock.MockProject
 import de.jensklingenberg.mpapt.common.MpAptProject
 import org.jetbrains.kotlin.codegen.extensions.ClassBuilderInterceptorExtension
-import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration

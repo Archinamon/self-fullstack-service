@@ -13,6 +13,7 @@ buildscript {
     dependencies {
         val kotlinVersion = System.getProperties()["kotlin.version"] as String
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("com.github.jengelman.gradle.plugins:shadow:5.0.0")
     }
 }
 
@@ -51,7 +52,7 @@ tasks {
 dependencies {
     val kotlinVersion = System.getProperties()["kotlin.version"] as String
 
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib-jdk8", kotlinVersion))
     implementation(kotlin("gradle-plugin-api", kotlinVersion))
 
     implementation("me.archinamon.tcp.server:plugin:latest")
