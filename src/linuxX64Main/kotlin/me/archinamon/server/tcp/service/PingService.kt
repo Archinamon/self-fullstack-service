@@ -1,6 +1,5 @@
 package me.archinamon.server.tcp.service
 
-import kotlinx.coroutines.runBlocking
 import me.archinamon.server.tcp.bind.BinderService
 import me.archinamon.server.tcp.bind.NativeObjectBinder
 import me.archinamon.server.tcp.bind.RouteCommand
@@ -17,8 +16,6 @@ object PingService : BinderService(), TcpPingService {
 
 object PingServiceBinder : TcpSocketBinder<PingService>(PingService::class) {
     init {
-        runBlocking {
-            bind(RouteCommand("ping"), TcpPingService::ping)
-        }
+        bind(RouteCommand("ping"), TcpPingService::ping)
     }
 }
