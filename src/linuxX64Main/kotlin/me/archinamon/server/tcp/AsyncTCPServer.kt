@@ -37,8 +37,7 @@ import kotlin.math.max
 
 @ExperimentalUnsignedTypes
 class AsyncTCPServer(
-    private val port: UShort,
-    private vararg val binders: SocketBinder
+    private val port: UShort
 ) {
 
     private companion object {
@@ -47,6 +46,8 @@ class AsyncTCPServer(
 
     private var socketDescriptor: Int = -1
     private val clients = mutableSetOf<Int>()
+
+    private val services = TcpBindersProvider()
 
     init {
         println("Welcome to KNN — the Kotlin Nano Nginx!")
@@ -135,7 +136,7 @@ class AsyncTCPServer(
         }
 
         TcpCallRouter(clientFd, whenMessageEmpty).proceed { request ->
-            binders.find { binder -> binder.find(request.command) }
+            services.get().find { binder -> binder.find(request.command) }
         }
     }
 }

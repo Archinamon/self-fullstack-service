@@ -7,15 +7,15 @@ import me.archinamon.server.tcp.bind.TcpSocketBinder
 
 //todo: codegen all this file with kompiler:plugin
 
-@NativeObjectBinder(PingService::class)
-object PingService : BinderService(), TcpPingService {
+@NativeObjectBinder(PingServiceImpl::class)
+object PingServiceImpl : BinderService(), PingService {
     override suspend fun ping(): String {
         return "OK"
     }
 }
 
-object PingServiceBinder : TcpSocketBinder<PingService>(PingService::class) {
+object PingServiceBinder : TcpSocketBinder<PingServiceImpl>(PingServiceImpl::class) {
     init {
-        bind(RouteCommand("ping"), TcpPingService::ping)
+        bind(RouteCommand("ping"), PingService::ping)
     }
 }
