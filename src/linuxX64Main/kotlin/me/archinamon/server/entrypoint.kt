@@ -2,6 +2,7 @@ package me.archinamon.server
 
 import kotlinx.cinterop.memScoped
 import me.archinamon.server.tcp.AsyncTCPServer
+import me.archinamon.server.tcp.service.PingServiceBinder
 
 // !!should be the same as `cgi.server.runningPort` value in gradle.properties file!!
 @ExperimentalUnsignedTypes
@@ -11,7 +12,7 @@ private const val DEV_PORT: UShort = 3434U
 fun main(args: Array<String>) {
     val serverPort = if (args.isNotEmpty()) args.first().toUShort() else DEV_PORT
 
-    with(AsyncTCPServer(serverPort)) {
+    with(AsyncTCPServer(serverPort, PingServiceBinder)) {
         do {
             memScoped {
                 handleConnections().let { readSet ->

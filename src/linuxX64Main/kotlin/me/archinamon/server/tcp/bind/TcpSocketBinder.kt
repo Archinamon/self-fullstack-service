@@ -1,10 +1,8 @@
 package me.archinamon.server.tcp.bind
 
 import kotlinx.coroutines.runBlocking
-import kotlin.reflect.ExperimentalAssociatedObjects
 import kotlin.reflect.KClass
 
-@ExperimentalAssociatedObjects
 actual open class TcpSocketBinder<T : BinderService> actual constructor(
     protected val routeClass: KClass<out T>
 ) : SocketBinder {
