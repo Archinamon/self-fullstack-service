@@ -1,20 +1,14 @@
 package me.archinamon.server.tcp.bind
 
-import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.AssociatedObjectKey
 import kotlin.reflect.KClass
+import kotlin.reflect.findAssociatedObject
 
-actual abstract class BinderService {
-    actual companion object Impl {
-        actual fun <T : BinderService> provideService(klass: KClass<out T>): T {
-            TODO("Not yet implemented")
-        }
+@AssociatedObjectKey
+actual annotation class NativeObjectBinder(actual val value: KClass<out BinderService>)
 
-        actual inline fun <reified T : BinderService> provideService(): T {
-            TODO("Not yet implemented")
-        }
+actual fun <R : Any?> syncLocally(lock: Any, block: () -> R): R = synchronized(lock, block)
 
-        actual inline fun <reified T : BinderService> singleton(): ReadOnlyProperty<Any?, T> {
-            TODO("Not yet implemented")
-        }
-    }
-}
+actual inline fun <reified T : Annotation> KClass<*>.findObject(): Any = this.findAssociatedObject<T>()
+    .takeIf { it != null }
+    ?: throw NoSuchElementException(INSTANCE_ERROR)
