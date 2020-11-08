@@ -119,6 +119,7 @@ kotlin {
             freeCompilerArgs = listOf(
                 "-XXLanguage:+InlineClasses",
                 "-Xuse-experimental=kotlin.Experimental",
+                "-Xopt-in=kotlin.ExperimentalUnsignedTypes",
                 "-Xopt-in=kotlin.reflect.ExperimentalAssociatedObjects",
                 "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
             )

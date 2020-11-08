@@ -40,7 +40,7 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(
         runBlocking {
             handlingError(request.command) {
                 BinderService.provideService(routeClass)
-                    .processor(request.parseData()!!)
+                    .processor(request.parseData(parser)!!)
                     .let(request.command::success)
                     .also { response ->
                         respond(toText(response))
@@ -56,7 +56,7 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(
         runBlocking {
             handlingError(request.command) {
                 BinderService.provideService(routeClass)
-                    .processor(request.parseData())
+                    .processor(request.parseData(parser))
                     .let(request.command::success)
                     .also { response ->
                         respond(toText(response))
