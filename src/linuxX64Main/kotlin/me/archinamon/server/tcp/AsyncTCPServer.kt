@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import me.archinamon.posix.ensureUnixCallResult
-import me.archinamon.server.tcp.bind.SocketBinder
+import me.archinamon.server.tcp.bind.boundServicesProvider
 import platform.posix.AF_INET
 import platform.posix.F_SETFL
 import platform.posix.INADDR_ANY
@@ -46,8 +46,6 @@ class AsyncTCPServer(
 
     private var socketDescriptor: Int = -1
     private val clients = mutableSetOf<Int>()
-
-    private val services = TcpBindersProvider()
 
     init {
         println("Welcome to KNN — the Kotlin Nano Nginx!")
@@ -136,7 +134,7 @@ class AsyncTCPServer(
         }
 
         TcpCallRouter(clientFd, whenMessageEmpty).proceed { request ->
-            services.get().find { binder -> binder.find(request.command) }
+            boundServicesProvider().find { binder -> binder.find(request.command) }
         }
     }
 }
