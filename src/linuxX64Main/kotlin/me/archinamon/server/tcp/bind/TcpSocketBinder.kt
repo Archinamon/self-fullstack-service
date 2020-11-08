@@ -32,6 +32,23 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(
         }
     }
 
+    // always non-null param
+    protected actual inline fun <reified PARAM : Any, reified RET> bind(
+        route: RouteCommand,
+        noinline processor: suspend T.(PARAM) -> RET
+    ) = acceptHandler(route) { request: BindingRequest ->
+        runBlocking {
+            handlingError(request.command) {
+                BinderService.provideService(routeClass)
+                    .processor(request.parseData()!!)
+                    .let(request.command::success)
+                    .also { response ->
+                        respond(toText(response))
+                    }
+            }
+        }
+    }
+
     protected actual inline fun <reified PARAM : Any?, reified RET> bind(
         route: RouteCommand,
         noinline processor: suspend T.(PARAM?) -> RET

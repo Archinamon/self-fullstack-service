@@ -15,6 +15,13 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(routeCla
         calls[processor.toString().replace("\\s".toRegex(), "")] = "tcp/$route"
     }
 
+    protected actual inline fun <reified PARAM : Any, reified RET> bind(
+        route: RouteCommand,
+        noinline processor: suspend T.(PARAM) -> RET
+    ) {
+        calls[processor.toString().replace("\\s".toRegex(), "")] = "tcp/$route"
+    }
+
     protected actual inline fun <reified PARAM : Any?, reified RET> bind(
         route: RouteCommand,
         noinline processor: suspend T.(PARAM?) -> RET

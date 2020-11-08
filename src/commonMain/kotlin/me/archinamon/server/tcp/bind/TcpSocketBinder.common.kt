@@ -9,6 +9,11 @@ expect open class TcpSocketBinder<T : BinderService>(routeClass: KClass<out T>) 
         noinline processor: suspend T.() -> RET
     )
 
+    protected inline fun <reified PARAM : Any, reified RET> bind(
+        route: RouteCommand,
+        noinline processor: suspend T.(PARAM) -> RET
+    )
+
     protected inline fun <reified PARAM : Any?, reified RET> bind(
         route: RouteCommand,
         noinline processor: suspend T.(PARAM?) -> RET

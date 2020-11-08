@@ -5,4 +5,5 @@ import me.archinamon.tcp.server.graph.TcpService
 @TcpService
 interface PingService {
     suspend fun ping(): String
+    suspend fun echo(data: String): String
 }
