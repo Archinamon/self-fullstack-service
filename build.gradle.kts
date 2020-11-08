@@ -42,6 +42,7 @@ allprojects {
         maven("https://dl.bintray.com/kotlin/kotlinx")
         maven("https://dl.bintray.com/kotlin/kotlin-js-wrappers")
         maven("https://dl.bintray.com/archinamon/maven")
+        maven("https://dl.bintray.com/rjaros/kotlin")
     }
 }
 
@@ -89,6 +90,9 @@ kotlin {
             kotlin.srcDir("build/generated-src/kompiler-plugin/js")
 
             dependencies {
+                api("pl.treksoft:jquery-kotlin:0.0.6")
+                implementation(npm("jquery", "^3.5.1"))
+
                 implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.2")
                 implementation("org.jetbrains:kotlin-react:16.13.1-pre.110-kotlin-$kotlinVersion")
                 implementation("org.jetbrains:kotlin-react-dom:16.13.1-pre.110-kotlin-$kotlinVersion")
@@ -111,10 +115,12 @@ kotlin {
 
     targets.flatMap(KotlinTarget::compilations).forEach { compilation ->
         compilation.kotlinOptions {
+            languageVersion = "1.4"
             freeCompilerArgs = listOf(
                 "-XXLanguage:+InlineClasses",
                 "-Xuse-experimental=kotlin.Experimental",
-                "-Xopt-in=kotlin.reflect.ExperimentalAssociatedObjects"
+                "-Xopt-in=kotlin.reflect.ExperimentalAssociatedObjects",
+                "-Xopt-in=kotlinx.serialization.InternalSerializationApi"
             )
         }
     }
