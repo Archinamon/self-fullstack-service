@@ -6,6 +6,8 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(routeCla
 
     protected val calls: MutableMap<String, String> = HashMap()
 
+    fun boundCalls(): Map<String, String> = HashMap(calls)
+
     protected actual inline fun <reified RET> bind(
         route: RouteCommand,
         noinline processor: suspend T.() -> RET
@@ -13,9 +15,9 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(routeCla
         calls[processor.toString().replace("\\s".toRegex(), "")] = "tcp/$route"
     }
 
-    protected actual inline fun <reified PARAM, reified RET> bind(
+    protected actual inline fun <reified PARAM : Any?, reified RET> bind(
         route: RouteCommand,
-        noinline processor: suspend T.(PARAM) -> RET
+        noinline processor: suspend T.(PARAM?) -> RET
     ) {
         calls[processor.toString().replace("\\s".toRegex(), "")] = "tcp/$route"
     }
