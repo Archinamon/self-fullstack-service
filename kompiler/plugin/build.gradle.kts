@@ -52,7 +52,7 @@ tasks {
 dependencies {
     implementation("me.archinamon.tcp.server:graph-jvm:latest")
 
-    implementation("com.squareup:kotlinpoet:1.6.0")
+    implementation("com.squareup:kotlinpoet:1.7.2")
     implementation("de.jensklingenberg:mpapt-runtime:0.8.7")
 
     compileOnly("org.jetbrains.kotlin:kotlin-compiler")
