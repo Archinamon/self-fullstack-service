@@ -8,4 +8,8 @@ actual object PingServiceImpl : BinderService(), PingService {
     override suspend fun ping(): String {
         return "OK"
     }
+
+    override suspend fun echo(data: String): String {
+        return data
+    }
 }
