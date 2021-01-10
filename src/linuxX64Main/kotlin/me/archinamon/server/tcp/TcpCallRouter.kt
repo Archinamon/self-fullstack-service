@@ -29,8 +29,9 @@ class TcpCallRouter(
 
             val rawStr = buffer.get().decodeToString()
 
-            return@usePinned rawStr.substring(0, rawStr.lastIndexOf('}') + 1)
+            return@usePinned rawStr
                 .also { println("Input message: [$it]") }
+                .substring(0, rawStr.lastIndexOf('}') + 1)
         }
 
         if (incomeMessage.isBlank() || !incomeMessage.isJson()) {
