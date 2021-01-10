@@ -13,29 +13,12 @@ kotlin {
     jvm()
     linuxX64()
     macosX64()
-
-    sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(kotlin("stdlib-common"))
-            }
-        }
-        val jsMain by getting {
-            dependencies {
-                implementation(kotlin("stdlib-js"))
-            }
-        }
-        val jvmMain by getting {
-            dependencies {
-                implementation(kotlin("stdlib-jdk8"))
-            }
-        }
-    }
 }
 
 tasks {
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+        kotlinOptions.includeRuntime = false
     }
 
     val publishToMavenLocal by getting

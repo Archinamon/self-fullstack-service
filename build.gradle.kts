@@ -94,9 +94,9 @@ kotlin {
                 implementation(npm("jquery", "^3.5.1"))
 
                 implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.2")
-                implementation("org.jetbrains:kotlin-react:16.13.1-pre.110-kotlin-$kotlinVersion")
-                implementation("org.jetbrains:kotlin-react-dom:16.13.1-pre.110-kotlin-$kotlinVersion")
-                implementation("org.jetbrains:kotlin-styled:1.0.0-pre.110-kotlin-$kotlinVersion")
+                implementation("org.jetbrains:kotlin-react:17.0.0-pre.134-kotlin-$kotlinVersion")
+                implementation("org.jetbrains:kotlin-react-dom:17.0.0-pre.134-kotlin-$kotlinVersion")
+                implementation("org.jetbrains:kotlin-styled:5.2.0-pre.134-kotlin-$kotlinVersion")
             }
         }
 
