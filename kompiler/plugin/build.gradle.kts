@@ -40,7 +40,6 @@ tasks {
         val transformer = FileRemoveTransformer(
             "META-INF/versions/.*".toRegex(),
             "META-INF/com.android.tools/.*".toRegex(),
-            "META-INF/services/.*".toRegex(),
             "META-INF/maven/.*".toRegex()
         )
         transform(transformer)

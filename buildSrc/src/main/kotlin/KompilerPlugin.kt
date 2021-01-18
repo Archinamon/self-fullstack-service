@@ -36,5 +36,5 @@ class KompilerPlugin : KotlinCompilerPluginSupportPlugin {
         version = "latest"
     )
 
-    override fun getPluginArtifactForNative(): SubpluginArtifact? = getPluginArtifact()
+    override fun getPluginArtifactForNative(): SubpluginArtifact = getPluginArtifact()
 }
