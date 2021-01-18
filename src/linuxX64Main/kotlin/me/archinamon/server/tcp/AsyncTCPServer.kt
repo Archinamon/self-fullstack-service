@@ -6,11 +6,15 @@ import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.sizeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import me.archinamon.posix.ensureUnixCallResult
 import me.archinamon.server.tcp.bind.boundServicesProvider
+import me.archinamon.server.tcp.protocol.http.HttpAdapter
+import me.archinamon.server.tcp.protocol.jrsc.JRSCAdapter
+import me.archinamon.server.tcp.protocol.ws.WebSocketAdapter
 import platform.posix.AF_INET
 import platform.posix.F_SETFL
 import platform.posix.INADDR_ANY
@@ -47,8 +51,17 @@ class AsyncTCPServer(
     private var socketDescriptor: Int = -1
     private val clients = mutableSetOf<Int>()
 
+    private val jrscAdapter = JRSCAdapter { request ->
+        boundServicesProvider().find { binder -> binder.find(request.command) }
+    }
+    private val protocolAdapters = arrayOf(
+        HttpAdapter(), // expects only protocol-upgrade to switch to ws
+        WebSocketAdapter(jrscAdapter), // rfc6455 compatible adapter to extract text data to proceed with jrsc protocol
+        jrscAdapter
+    )
+
     init {
-        println("Welcome to KNN — the Kotlin Nano Nginx!")
+        println("Welcome to KTS — the Kotlin TCP server!")
 
         // Initialize sockets in platform-dependent way.
         init_sockets()
@@ -64,13 +77,13 @@ class AsyncTCPServer(
                 .ensureUnixCallResult("fcntl") { ret -> ret != -1 }
 
             serverAddr.apply {
-                memset(this.ptr, 0, sockaddr_in.size.convert())
+                memset(this.ptr, 0, sizeOf<sockaddr_in>().convert())
                 sin_family = AF_INET.convert()
                 sin_port = htons(port)
                 sin_addr.s_addr = htonl(INADDR_ANY)
             }
 
-            bind(socketDescriptor, serverAddr.ptr.reinterpret(), sockaddr_in.size.convert())
+            bind(socketDescriptor, serverAddr.ptr.reinterpret(), sizeOf<sockaddr_in>().convert())
                 .ensureUnixCallResult("bind") { ret -> ret == 0 }
 
             listen(socketDescriptor, MAX_CONNECTIONS)
@@ -133,8 +146,6 @@ class AsyncTCPServer(
             println("Client disconnects... close connection.")
         }
 
-        TcpCallRouter(clientFd, whenMessageEmpty).proceed { request ->
-            boundServicesProvider().find { binder -> binder.find(request.command) }
-        }
+        TcpCallRouter(clientFd, whenMessageEmpty, protocolAdapters).proceed()
     }
 }

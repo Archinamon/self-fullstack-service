@@ -1,22 +1,24 @@
 package me.archinamon.server.tcp.bind
 
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import me.archinamon.server.tcp.protocol.ProtocolAdapter
 
 abstract class CallRouter {
 
     protected abstract val clientDescriptor: Int
     protected abstract val onDisconnectDispatcher: (fd: Int) -> Unit
+    protected abstract val supportedProtocols: Array<ProtocolAdapter>
 
-    val parser = Json {
-        isLenient = true
+    protected fun acceptProtocol(input: ByteArray): ProtocolAdapter? {
+        return supportedProtocols.find { adapter -> adapter.isExpected(input) }
     }
 
-    abstract suspend fun proceed(binderSearch: (request: BindingRequest) -> SocketBinder?)
+    abstract suspend fun proceed()
 
-    abstract fun respond(response: String)
+    abstract fun String.respond()
 
-    inline fun <reified R> toText(value: BindingResponse<R>): String {
-        return parser.encodeToString(value)
+    abstract fun ByteArray.respond()
+
+    inline fun <reified R> respond(response: BindingResponse<R>) {
+        JsonTranslator.translate(response).respond()
     }
 }

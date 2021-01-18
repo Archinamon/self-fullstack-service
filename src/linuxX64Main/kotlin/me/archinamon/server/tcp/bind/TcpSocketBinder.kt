@@ -25,9 +25,7 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(
                 BinderService.provideService(routeClass)
                     .processor()
                     .let(request.command::success)
-                    .also { response ->
-                        respond(toText(response))
-                    }
+                    .also { response -> respond(response) }
             }
         }
     }
@@ -40,11 +38,9 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(
         runBlocking {
             handlingError(request.command) {
                 BinderService.provideService(routeClass)
-                    .processor(request.parseData(parser)!!)
+                    .processor(request.parseData(JsonTranslator.parser)!!)
                     .let(request.command::success)
-                    .also { response ->
-                        respond(toText(response))
-                    }
+                    .also { response -> respond(response) }
             }
         }
     }
@@ -56,11 +52,9 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(
         runBlocking {
             handlingError(request.command) {
                 BinderService.provideService(routeClass)
-                    .processor(request.parseData(parser))
+                    .processor(request.parseData(JsonTranslator.parser))
                     .let(request.command::success)
-                    .also { response ->
-                        respond(toText(response))
-                    }
+                    .also { response -> respond(response) }
             }
         }
     }
@@ -86,8 +80,7 @@ actual open class TcpSocketBinder<T : BinderService> actual constructor(
             any.message
         } else "Error proceeding [$cmd] command. See logs for more details."
 
-        BindingResponse(cmd, FAILURE, message).also { responseDto ->
-            respond(toText(responseDto))
-        }
+        BindingResponse(cmd, FAILURE, message)
+            .also { response -> respond(response) }
     }
 }
